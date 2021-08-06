@@ -1,0 +1,12 @@
+# The way I write my .dockerignore is:
+# I read the tree and add everything I don't need, if I made a mistake,
+# I can delete the line later.
+.github
+node_modules
+.gitignore
+README.md
+
+# In JS projects, there are not a lot of things to exclude (especially in a repo
+# w/o tests 🌝
+# But things like tests, test configs, lint configs, ... nothing is needed to build
+# an image.
