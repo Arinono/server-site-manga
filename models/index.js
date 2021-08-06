@@ -1,19 +1,40 @@
-'use strict';
-
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
 const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.js')[env];
 const db = {};
 
-let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
+// I'm lazy, I'm copy/pasted
+const envOrNull = key => process.env[key] ?? null
+const envOrError = (key) => {
+  const val = process.env[key]
+  if (val && val.length > 0) {
+    return val
+  }
+  throw new MissingEnvironmentVariableError(key)
 }
+
+class MissingEnvironmentVariableError extends Error {
+  constructor(key) {
+    super(`${key} must be provided`)
+    this.name = 'MissingEnvironmentVariableError'
+  }
+}
+
+/**
+ * Here we removed the branching in the setup of the client for a more reliable
+ * usage later down the road given different setups.
+ */
+const databasePath = envOrNull('DATABASE_PATH')
+const sequelize = new Sequelize(
+  envOrError('DATABASE'),
+  envOrError('DATABASE_USER'),
+  envOrError('DATABASE_PASSWD'),
+  {
+    dialect: 'sqlite',
+    storage: databasePath ?? ':memory'
+  }
+)
 
 fs
   .readdirSync(__dirname)
