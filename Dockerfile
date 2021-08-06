@@ -1,41 +1,18 @@
-# No layering
-FROM node:latest
+# This one will be a lot more fun with some tricks
+FROM node:latest as builder
 
 WORKDIR /app
-COPY . .
-RUN npm i
-
-ENTRYPOINT [ "node", "/app/index.js" ]
-
-###
-
-# Good layering
-FROM node:latest
-
-WORKDIR /app
-COPY package-lock.json .
 COPY package.json .
+COPY package-lock.json .
 RUN npm i
 COPY . .
+# ncc is a tool to bundle all JS files and their deps into a single file.
+# with this we go from a (uncompressed) 1.2Gb (yes node:latest is big) to 120Mb image
+RUN npx -y @vercel/ncc build -m server.js -o index.js --source-map
 
-ENTRYPOINT [ "node", "/app/index.js" ]
-
-###
-
-# Overkill layering, just for fun
-FROM node:latest
+FROM node:alpine as server
 
 WORKDIR /app
-COPY package-lock.json .
-COPY package.json .
-RUN npm i
-COPY models .
-COPY resolvers .
-COPY schemas .
-COPY . .
-
-# This is actually decent when you don't have too much things.
+COPY --from=builder /app/index.js .
 
 ENTRYPOINT [ "node", "/app/index.js" ]
-
-# N.B.: I did not try these images, it's just gut feelings, but the idea is here.
